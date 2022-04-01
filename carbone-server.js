@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require('path')
 const util = require("util");
 const cors = require("cors");
 const AWS = require("aws-sdk");
@@ -6,6 +7,7 @@ const dotenv = require("dotenv");
 const multer = require("multer");
 const carbone = require("carbone");
 const express = require("express");
+const nativeAuth = require('basic-auth')
 const basicAuth = require("express-basic-auth");
 const exec = util.promisify(require("child_process").exec);
 
@@ -17,6 +19,46 @@ const username = process.env.USER || "user";
 const password = process.env.PASSWORD || "password";
 const users = {};
 users[username] = password;
+const auth = basicAuth({
+  users,
+  unauthorizedResponse: {
+    message: "Bad credentials",
+  },
+})
+
+app.get('/', function(req, res) {
+  let user = nativeAuth(req)
+  if (user === undefined || user['name'] !== username || user['pass'] !== password) {
+    res.statusCode = 401
+    res.setHeader('WWW-Authenticate', 'Basic realm="Node"')
+    res.end('Unauthorized')
+  } else {
+    res.sendFile(path.join(__dirname, 'ui/index.html'));
+  }
+});
+
+app.get('/js', function(req, res) {
+  res.sendFile(path.join(__dirname, 'ui/script.js'));
+})
+app.get('/download/:file', function(req, res) {
+  const filePath = path.join(__dirname, 'templates/' + req.params.file)
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, req.params.file);
+  } else {
+    res.status = 404
+    res.json({ message: 'File not found' })
+  }
+})
+app.delete('/template/:file', function(req, res) {
+  const filePath = path.join(__dirname, 'templates/' + req.params.file)
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+    res.json({ message: 'File deleted' })
+  } else {
+    res.status = 404
+    res.json({ message: 'File not found' })
+  }
+})
 
 app.use(
   cors({
@@ -24,14 +66,6 @@ app.use(
   })
 );
 
-app.use(
-  basicAuth({
-    users,
-    unauthorizedResponse: {
-      message: "Bad credentials",
-    },
-  })
-);
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ limit: "50mb" }));
 
@@ -40,11 +74,7 @@ app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
 
-app.get("/", async (req, res) => {
-  res.send("Welcome to Carbone Server");
-});
-
-app.get("/template", async (req, res) => {
+app.get("/template", auth, async (req, res) => {
   const files = await fs.promises.readdir(`./templates`);
   res.send(files);
 });
@@ -60,11 +90,11 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
-app.post("/template", upload.single(`template`), async (req, res) => {
+app.post("/template", auth, upload.single(`template`), async (req, res) => {
   res.send("Template Uploaded!");
 });
 
-app.all("/generate", async (req, res) => {
+app.all("/generate", auth, async (req, res) => {
   var template, filename, imagesReplace, data, options;
   if (req.method === "GET") {
     template = req.query.template;
