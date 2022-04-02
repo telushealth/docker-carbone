@@ -57,3 +57,14 @@ Important points:
 Caveats:
 - Image dimension must be the same otherwise the new image will be scaled using the old image dimension
 - Tested using docx and odt
+
+## User Interface
+go to root url to access UI
+### Login with basic
+![Image](https://www.btklsby.go.id/images/placeholder/basic.png)
+### Listing template
+![Image](https://www.btklsby.go.id/images/placeholder/basic.png)
+### Upload template
+![Image](https://www.btklsby.go.id/images/placeholder/basic.png)
+### Test template
+![Image](https://www.btklsby.go.id/images/placeholder/basic.png)

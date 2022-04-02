@@ -1,14 +1,3 @@
-function get(url) {
-    return new Promise((resolve, reject) => {
-      const req = new XMLHttpRequest();
-      req.withCredentials = true
-      req.open('GET', url);
-      req.onload = () => req.status === 200 ? resolve(req.response) : reject(Error(req.statusText));
-      req.onerror = (e) => reject(Error(`Network Error: ${e}`));
-      req.send();
-    });
-}
-
 function setLoading(state) {
     const initial = document.getElementById('initial');
     if (!initial) { return }
@@ -22,36 +11,47 @@ function setLoading(state) {
 
 function setContent(data) {
     const tbody = document.getElementById('tbody')
+    const select = document.getElementById('template')
     tbody.innerHTML = ''
+    select.innerHTML = '<option value="">--SELECT--</option>'
     data.forEach((file, i) => {
         tbody.innerHTML += `
             <tr>
                 <th>${i + 1}</th>
                 <td>${file}</td>
                 <td>
+                    <button class="btn btn-primary btn-sm test" data-file="${file}">Test</button>
                     <button type="submit" class="btn btn-secondary btn-sm" onclick="window.open('/download/${file}')">Download</button>
-                    <button class="btn btn-danger btn-sm delete" data-file="${file}">Hapus</button>
+                    <button class="btn btn-danger btn-sm delete" data-file="${file}">Delete</button>
                 </td>
             </tr>
         `
+        select.innerHTML += `<option>${file}</option>`
     });
-    var deletes = document.getElementsByClassName("delete");
+
+    const deletes = document.getElementsByClassName("delete");
     for (let btn of deletes) {
         btn.addEventListener('click', askDelete)
     }
+    const tests = document.getElementsByClassName("test");
+    for (let btn of tests) {
+        btn.addEventListener('click', testTemplate)
+    }
 }
 
-getData()
-function getData () {
-    setLoading(true)
-    get('/template').then(res => {
-        const data = JSON.parse(res)
-        if (data && data.length) {
-            setContent(data)
+async function getData () {
+    try {
+        setLoading(true)
+        const response = await fetch('/template', { method: "GET" })
+        if (response.status === 200) {
+            const data = await response.json()
+            if (data && data.length) {
+                setContent(data)
+            }
         }
-    }).finally(() => {
+    } finally {
         setLoading(false)
-    })
+    }
 }
 
 const btnUpload = document.getElementById('upload')
@@ -71,8 +71,8 @@ async function uploadFile() {
           body: formData
         })
         file.value = ''
-        var modalEL = document.getElementById('modal');
-        var modal = bootstrap.Modal.getInstance(modalEL)
+        const modalEL = document.getElementById('modal');
+        const modal = bootstrap.Modal.getInstance(modalEL)
         modal.hide();
         getData();
     } catch (error) {
@@ -95,3 +95,63 @@ async function askDelete (e) {
         }
     }
 }
+
+async function testTemplate (e) {
+    const target = e.target
+    const file = target.getAttribute('data-file')
+    const template = document.getElementById('template')
+    const filename = document.getElementById('filename')
+    const json = document.getElementById('json')
+    const options = document.getElementById('options')
+    template.value = file
+    filename.value = `test-${file}`
+    json.value = '{}'
+    options.value = '{}'
+    setTimeout(() => {
+        const modalEL = document.getElementById('modal-test');
+        const modal = new bootstrap.Modal(modalEL)
+        modal.show();
+    }, 10)
+}
+
+const btnTest = document.getElementById('test')
+btnTest.addEventListener('click', downloadTest)
+async function downloadTest () {
+    const template = document.getElementById('template')
+    const filename = document.getElementById('filename')
+    const json = document.getElementById('json')
+    const options = document.getElementById('options')
+    const data = {
+        template: template.value,
+        filename: filename.value,
+        json: JSON.parse(json.value),
+        options: JSON.parse(options.value),
+    }
+    try {
+        const response = await fetch('/generate?download=true', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        })
+
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename.value
+        document.body.appendChild(a);
+        a.click();    
+        a.remove();
+
+        const modalEL = document.getElementById('modal-test');
+        const modal = bootstrap.Modal.getInstance(modalEL)
+        modal.hide();
+        getData();
+    } catch (error) {
+        console.log(error)
+        window.alert('Error test template')
+    }
+}
+getData()
