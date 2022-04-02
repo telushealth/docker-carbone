@@ -61,10 +61,10 @@ Caveats:
 ## User Interface
 go to root url to access UI
 ### Login with basic
-![Image](https://www.btklsby.go.id/images/placeholder/basic.png)
+![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshoot/login.png)
 ### Listing template
-![Image](https://www.btklsby.go.id/images/placeholder/basic.png)
+![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshoot/list.png)
 ### Upload template
-![Image](https://www.btklsby.go.id/images/placeholder/basic.png)
+![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshoot/upload.png)
 ### Test template
-![Image](https://www.btklsby.go.id/images/placeholder/basic.png)
+![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshoot/test.png)
