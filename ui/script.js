@@ -1,5 +1,5 @@
 function setLoading(state) {
-    const initial = document.getElementById('initial');
+    const initial = document.getElementById('initial')
     if (!initial) { return }
 
     if (state) {
@@ -27,13 +27,13 @@ function setContent(data) {
             </tr>
         `
         select.innerHTML += `<option>${file}</option>`
-    });
+    })
 
-    const deletes = document.getElementsByClassName("delete");
+    const deletes = document.getElementsByClassName("delete")
     for (let btn of deletes) {
         btn.addEventListener('click', askDelete)
     }
-    const tests = document.getElementsByClassName("test");
+    const tests = document.getElementsByClassName("test")
     for (let btn of tests) {
         btn.addEventListener('click', testTemplate)
     }
@@ -63,18 +63,18 @@ async function uploadFile() {
         return
     }
 
-    let formData = new FormData();           
-    formData.append("template", file.files[0]);
+    let formData = new FormData()           
+    formData.append("template", file.files[0])
     try {
         await fetch('/template', {
           method: "POST", 
           body: formData
         })
         file.value = ''
-        const modalEL = document.getElementById('modal');
+        const modalEL = document.getElementById('modal')
         const modal = bootstrap.Modal.getInstance(modalEL)
-        modal.hide();
-        getData();
+        modal.hide()
+        getData()
     } catch (error) {
         window.alert('Error upload file')
     }
@@ -89,7 +89,7 @@ async function askDelete (e) {
             await fetch(`/template/${file}`, {
               method: "DELETE"
             })
-            getData();
+            getData()
         } catch (error) {
             window.alert('Error delete file')
         }
@@ -108,15 +108,17 @@ async function testTemplate (e) {
     json.value = '{}'
     options.value = '{}'
     setTimeout(() => {
-        const modalEL = document.getElementById('modal-test');
+        const modalEL = document.getElementById('modal-test')
         const modal = new bootstrap.Modal(modalEL)
-        modal.show();
+        modal.show()
     }, 10)
 }
 
 const btnTest = document.getElementById('test')
 btnTest.addEventListener('click', downloadTest)
-async function downloadTest () {
+async function downloadTest (e) {
+    const target = e.target
+    target.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Downloading'
     const template = document.getElementById('template')
     const filename = document.getElementById('filename')
     const json = document.getElementById('json')
@@ -136,21 +138,28 @@ async function downloadTest () {
           body: JSON.stringify(data)
         })
 
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = filename.value
-        document.body.appendChild(a);
-        a.click();    
-        a.remove();
+        target.innerHTML = 'Download'
 
-        const modalEL = document.getElementById('modal-test');
-        const modal = bootstrap.Modal.getInstance(modalEL)
-        modal.hide();
-        getData();
+        if (response.status === 200) {
+            const resFilename =  response.headers.get('Content-Disposition').split('filename=')[1]
+            const blob = await response.blob()
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = resFilename
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+
+            const modalEL = document.getElementById('modal-test')
+            const modal = bootstrap.Modal.getInstance(modalEL)
+            modal.hide()
+            getData()
+        } else {
+            window.alert('Error download file')
+        }
     } catch (error) {
-        console.log(error)
+        target.innerHTML = 'Download'
         window.alert('Error test template')
     }
 }

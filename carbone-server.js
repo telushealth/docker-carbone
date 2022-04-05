@@ -56,7 +56,7 @@ app.get('/download/:file', function(req, res) {
   if (fs.existsSync(filePath)) {
     res.download(filePath, req.params.file)
   } else {
-    res.status = 404
+    res.statusCode = 404
     res.json({ message: 'File not found' })
   }
 })
@@ -67,7 +67,7 @@ app.delete('/template/:file', function(req, res) {
     fs.unlinkSync(filePath)
     res.json({ message: 'File deleted' })
   } else {
-    res.status = 404
+    res.statusCode = 404
     res.json({ message: 'File not found' })
   }
 })
@@ -114,8 +114,11 @@ async function replaceImages(template, images) {
 function render(template, data, options) {
   return new Promise((resolve, reject) => {
     carbone.render(template, data, options, (err, result) => {
-      if (err) { return reject(err) }
-      resolve(result)
+      if (err) {
+        reject(new Error(err))
+      } else {
+        resolve(result)
+      }
     })
   })
 }
@@ -130,7 +133,7 @@ function seveToS3 (Body, Key) {
       Key
     }, function (err, data) {
       if (err) {
-        reject(err)
+        reject(new Error(err))
       } else {
         resolve(data.Location)
       }
@@ -157,23 +160,25 @@ async function generate(res, params, download = false) {
 
   try {
     const buffer = await render(template, data, options)
+
     if (download) {
       res.set({
+        'Access-Control-Expose-Headers': 'Content-Disposition',
         'Content-Type': mime.lookup(filename),
         'Content-Disposition': `attachment; filename=${filename}`
-      })      
+      })
       res.end(buffer)
     } else {
       try {
         const url = await seveToS3(buffer, filename)
         res.json({ url })
       } catch (e) {
-        res.status = 500
-        res.json({ message: e.message })    
+        res.statusCode = 500
+        res.json({ message: e.message || 'Error save to S3' })
       }
     }
   } catch (e) {
-    res.status = 500
+    res.statusCode = 500
     res.json({ message: e.message })
   }
 }
@@ -184,6 +189,7 @@ app.get('/generate', auth, async (req, res) => {
   const imagesReplace = JSON.parse(req.query.imagesReplace)
   const data = JSON.parse(req.query.json)
   const options = JSON.parse(req.query.options)
+
   return generate(res, { template, filename, data, options, imagesReplace }, req.query.download === 'true')
 })
 
@@ -193,6 +199,7 @@ app.post('/generate', auth, async (req, res) => {
   const data = req.body.json
   const options = req.body.options
   const imagesReplace = req.body.imagesReplace
+
   return generate(res, { template, filename, data, options, imagesReplace }, req.query.download === 'true')
 })
 
