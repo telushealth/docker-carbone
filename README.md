@@ -61,10 +61,10 @@ Caveats:
 ## User Interface
 go to root url to access UI
 ### Login with basic
-![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshoot/login.png)
+![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshot/login.png)
 ### Listing template
-![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshoot/list.png)
+![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshot/list.png)
 ### Upload template
-![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshoot/upload.png)
+![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshot/upload.png)
 ### Test template
-![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshoot/test.png)
+![Image](https://raw.githubusercontent.com/klinikpintar/docker-carbone/master/screenshot/test.png)
