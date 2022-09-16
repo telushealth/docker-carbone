@@ -17,6 +17,8 @@ const users = {}
 users[username] = password
 const auth = basicAuth({
   users,
+  challenge: true,
+  realm: 'Node',
   unauthorizedResponse: {
     message: 'Bad credentials',
   },
